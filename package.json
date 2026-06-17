@@ -1,0 +1,14 @@
+{
+  "name": "web-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "uvicorn app.main:app --reload --port 8000 --app-dir backend",
+    "install:all": "npm install && npm install --prefix frontend && pip install -r backend/requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
