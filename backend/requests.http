@@ -1,153 +1,127 @@
-### BASE URL
+### ============================================================
+### TRUCK & ROLL - API Test Suite
+### Extension: REST Client (VS Code)
+### Ejecutar seed primero: python backend/seed.py
+### ============================================================
+
 @base = http://localhost:8000
 
-### ── SEED: agregar productos al menú ──────────────────────────
+### ============================================================
+### HEALTH CHECK
+### ============================================================
 
-### Burger Clásica
-POST {{base}}/menu/
-Content-Type: application/json
+### Estado de la API
+GET {{base}}/
 
-{
-  "nombre": "Burger Clásica",
-  "descripcion": "Medallón de res, lechuga, tomate y cheddar",
-  "precio": 450,
-  "disponibilidad": 20,
-  "categoria": "Burgers"
-}
+### ============================================================
+### MENU - Ver productos
+### ============================================================
 
-### Double Smash
-POST {{base}}/menu/
-Content-Type: application/json
-
-{
-  "nombre": "Double Smash",
-  "descripcion": "Doble medallón aplastado, salsa secreta y pickles",
-  "precio": 620,
-  "disponibilidad": 15,
-  "categoria": "Burgers"
-}
-
-### Coca-Cola
-POST {{base}}/menu/
-Content-Type: application/json
-
-{
-  "nombre": "Coca-Cola",
-  "descripcion": "Lata 354ml",
-  "precio": 180,
-  "disponibilidad": 50,
-  "categoria": "Bebidas"
-}
-
-### Agua Mineral
-POST {{base}}/menu/
-Content-Type: application/json
-
-{
-  "nombre": "Agua Mineral",
-  "descripcion": "500ml sin gas",
-  "precio": 120,
-  "disponibilidad": 50,
-  "categoria": "Bebidas"
-}
-
-### Papas Fritas
-POST {{base}}/menu/
-Content-Type: application/json
-
-{
-  "nombre": "Papas Fritas",
-  "descripcion": "Porción grande con sal y pimienta",
-  "precio": 280,
-  "disponibilidad": 30,
-  "categoria": "Extras"
-}
-
-### Ver menú completo
+### Ver menu completo
 GET {{base}}/menu/
 
-### ── AUTH ──────────────────────────────────────────────────────
+### ============================================================
+### AUTH - Registro y Login
+### ============================================================
 
-### Registrar cliente
+### Registrar cliente nuevo
 POST {{base}}/auth/register
 Content-Type: application/json
 
 {
-  "nombre": "Juan Test",
-  "email": "juan@test.com",
-  "telefono": "099123456",
-  "password": "pass1234"
+  "nombre": "Test User",
+  "email": "test@email.com",
+  "telefono": "099777888",
+  "password": "test1234"
 }
 
-### Login  → copiar access_token en @token
+### Login con cliente del seed (juan)
+# @name loginJuan
 POST {{base}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "juan@test.com",
-  "password": "pass1234"
+  "email": "juan@email.com",
+  "password": "1234"
 }
 
-### ── PEDIDOS ───────────────────────────────────────────────────
+### Login con cliente del seed (maria)
+# @name loginMaria
+POST {{base}}/auth/login
+Content-Type: application/json
 
-### Reemplazá con el token real obtenido en /login
-@token = <PEGAR_TOKEN_AQUI>
+{
+  "email": "maria@email.com",
+  "password": "1234"
+}
 
-### Crear pedido (reemplazá los producto_id con IDs reales del menú)
+### ============================================================
+### PEDIDOS - Crear, consultar y pagar
+### ============================================================
+
+### Extraer token del login de Juan
+@tokenJuan = {{loginJuan.response.body.$.access_token}}
+
+### Extraer token del login de Maria
+@tokenMaria = {{loginMaria.response.body.$.access_token}}
+
+### Crear pedido (Juan)
 # @name crearPedido
 POST {{base}}/pedidos/
 Content-Type: application/json
-X-Cliente-Id: {{token}}
+X-Cliente-Id: {{tokenJuan}}
 
 {
   "items": [
-    { "producto_id": "<ID_BURGER>", "cantidad": 1 },
-    { "producto_id": "<ID_COCA>",   "cantidad": 2 }
+    { "producto_id": "REEMPLAZAR_CON_ID_PRODUCTO", "cantidad": 2 },
+    { "producto_id": "REEMPLAZAR_CON_ID_PRODUCTO", "cantidad": 1 }
   ]
 }
 
-### Guardar ID del pedido creado
-@pedidoId = <PEGAR_PEDIDO_ID>
+### Nota: Para obtener IDs de productos, ejecutar GET /menu/ primero
+### y reemplazar los valores arriba con los IDs reales.
 
-### Ver pedido
+### Consultar pedido (Juan)
 GET {{base}}/pedidos/{{pedidoId}}
-X-Cliente-Id: {{token}}
+X-Cliente-Id: {{tokenJuan}}
 
-### Pagar con Efectivo
+### Pagar pedido con EFECTIVO
 POST {{base}}/pedidos/{{pedidoId}}/pagar
 Content-Type: application/json
-X-Cliente-Id: {{token}}
+X-Cliente-Id: {{tokenJuan}}
 
 {
   "metodo_pago": "EFECTIVO"
 }
 
-### Pagar con Tarjeta
-# POST {{base}}/pedidos/{{pedidoId}}/pagar
-# Content-Type: application/json
-# X-Cliente-Id: {{token}}
-#
-# {
-#   "metodo_pago": "TARJETA",
-#   "datos_externos": { "ultimos_4": "1234" }
-# }
+### Pagar pedido con TARJETA
+POST {{base}}/pedidos/{{pedidoId}}/pagar
+Content-Type: application/json
+X-Cliente-Id: {{tokenJuan}}
 
-### Pagar con MercadoPago
-# POST {{base}}/pedidos/{{pedidoId}}/pagar
-# Content-Type: application/json
-# X-Cliente-Id: {{token}}
-#
-# {
-#   "metodo_pago": "MERCADOPAGO",
-#   "datos_externos": { "preference_id": "pref_abc123" }
-# }
+{
+  "metodo_pago": "TARJETA",
+  "datos_externos": { "ultimos_4": "1234" }
+}
 
-### ── COCINA ────────────────────────────────────────────────────
+### Pagar pedido con MERCADO_PAGO
+POST {{base}}/pedidos/{{pedidoId}}/pagar
+Content-Type: application/json
+X-Cliente-Id: {{tokenJuan}}
+
+{
+  "metodo_pago": "MERCADO_PAGO",
+  "datos_externos": { "preference_id": "pref_abc123" }
+}
+
+### ============================================================
+### COCINA - Gestion de estados
+### ============================================================
 
 ### Ver pedidos activos (no requiere auth)
 GET {{base}}/cocina/pedidos
 
-### Avanzar a EN_PREPARACION
+### Avanzar pedido a EN_PREPARACION
 PATCH {{base}}/cocina/pedidos/{{pedidoId}}/estado
 Content-Type: application/json
 
@@ -155,7 +129,7 @@ Content-Type: application/json
   "estado": "EN_PREPARACION"
 }
 
-### Avanzar a LISTO (dispara notificación al cliente)
+### Avanzar pedido a LISTO (dispara notificacion al cliente)
 PATCH {{base}}/cocina/pedidos/{{pedidoId}}/estado
 Content-Type: application/json
 
@@ -163,7 +137,7 @@ Content-Type: application/json
   "estado": "LISTO"
 }
 
-### Avanzar a ENTREGADO
+### Avanzar pedido a ENTREGADO
 PATCH {{base}}/cocina/pedidos/{{pedidoId}}/estado
 Content-Type: application/json
 
@@ -171,16 +145,107 @@ Content-Type: application/json
   "estado": "ENTREGADO"
 }
 
-### ── NOTIFICACIONES ────────────────────────────────────────────
+### ============================================================
+### NOTIFICACIONES
+### ============================================================
 
-### Ver mis notificaciones
+### Ver mis notificaciones (Juan)
 GET {{base}}/notificaciones/
-X-Cliente-Id: {{token}}
+X-Cliente-Id: {{tokenJuan}}
 
-### Marcar como leída (reemplazá el ID)
-PATCH {{base}}/notificaciones/<NOTIF_ID>/leida
-X-Cliente-Id: {{token}}
+### Ver mis notificaciones (Maria)
+GET {{base}}/notificaciones/
+X-Cliente-Id: {{tokenMaria}}
 
-### ── HEALTH ────────────────────────────────────────────────────
+### Marcar notificacion como leida
+PATCH {{base}}/notificaciones/REEMPLAZAR_CON_NOTIF_ID/leida
+X-Cliente-Id: {{tokenJuan}}
 
-GET {{base}}/
+### ============================================================
+### MENU - Gestion de productos (admin)
+### ============================================================
+
+### Agregar producto nuevo
+POST {{base}}/menu/
+Content-Type: application/json
+
+{
+  "nombre": "Producto Test",
+  "descripcion": "Descripcion del producto de prueba",
+  "precio": 350.0,
+  "disponibilidad": 10,
+  "categoria": "Test"
+}
+
+### Actualizar producto
+PUT {{base}}/menu/REEMPLAZAR_CON_ID_PRODUCTO
+Content-Type: application/json
+
+{
+  "precio": 400.0,
+  "disponibilidad": 5
+}
+
+### Cambiar stock de producto
+PATCH {{base}}/menu/REEMPLAZAR_CON_ID_PRODUCTO/stock?cantidad=20
+
+### ============================================================
+### FLUJO COMPLETO DE PRUEBA
+### ============================================================
+
+### Paso 1: Login
+# @name paso1Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "carlos@email.com",
+  "password": "1234"
+}
+
+### Paso 2: Ver menu
+GET {{base}}/menu/
+
+### Paso 3: Crear pedido (usar IDs del menu)
+# @name paso3CrearPedido
+POST {{base}}/pedidos/
+Content-Type: application/json
+X-Cliente-Id: {{paso1Login.response.body.$.access_token}}
+
+{
+  "items": [
+    { "producto_id": "REEMPLAZAR_CON_ID_PRODUCTO", "cantidad": 1 }
+  ]
+}
+
+### Paso 4: Pagar pedido
+POST {{base}}/pedidos/REEMPLAZAR_CON_PEDIDO_ID/pagar
+Content-Type: application/json
+X-Cliente-Id: {{paso1Login.response.body.$.access_token}}
+
+{
+  "metodo_pago": "EFECTIVO"
+}
+
+### Paso 5: Cocina - Ver pedidos
+GET {{base}}/cocina/pedidos
+
+### Paso 6: Cocina - Avanzar estados
+PATCH {{base}}/cocina/pedidos/REEMPLAZAR_CON_PEDIDO_ID/estado
+Content-Type: application/json
+
+{
+  "estado": "EN_PREPARACION"
+}
+
+### Paso 7: Cocina - Marcar LISTO
+PATCH {{base}}/cocina/pedidos/REEMPLAZAR_CON_PEDIDO_ID/estado
+Content-Type: application/json
+
+{
+  "estado": "LISTO"
+}
+
+### Paso 8: Cliente - Ver notificaciones
+GET {{base}}/notificaciones/
+X-Cliente-Id: {{paso1Login.response.body.$.access_token}}
