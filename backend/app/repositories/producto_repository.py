@@ -1,28 +1,12 @@
-from typing import Optional, List
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.models import Producto
+from app.repositories.base_repository import BaseRepository
 
 
-class ProductoRepository:
+class ProductoRepository(BaseRepository[Producto]):
     def __init__(self, db: Session):
-        self._db = db
-
-    def obtener_todos(self) -> List[Producto]:
-        return self._db.query(Producto).all()
-
-    def obtener(self, producto_id: str) -> Optional[Producto]:
-        return self._db.query(Producto).filter(Producto.id == producto_id).first()
-
-    def agregar(self, producto: Producto) -> Producto:
-        self._db.add(producto)
-        self._db.commit()
-        self._db.refresh(producto)
-        return producto
-
-    def actualizar(self, producto: Producto) -> Producto:
-        self._db.commit()
-        self._db.refresh(producto)
-        return producto
+        super().__init__(db, Producto)
 
     def actualizar_stock(self, producto_id: str, cantidad: int) -> Optional[Producto]:
         producto = self.obtener(producto_id)

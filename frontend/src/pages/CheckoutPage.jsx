@@ -1,9 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api/client';
-import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useCheckout } from '../hooks/useCheckout';
 
 const METODOS = [
   { value: 'EFECTIVO', label: '💵 Efectivo', desc: 'Pagá al retirar' },
@@ -12,45 +9,24 @@ const METODOS = [
 ];
 
 export default function CheckoutPage() {
-  const { cliente } = useAuth();
-  const { items, total, clearCart, removeItem, updateQuantity } = useCart();
-  const navigate = useNavigate();
+  const { removeItem, updateQuantity } = useCart();
   const toast = useToast();
-  const [metodo, setMetodo] = useState('EFECTIVO');
-  const [loading, setLoading] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const {
+    cliente,
+    items,
+    total,
+    metodo,
+    setMetodo,
+    loading,
+    showConfirm,
+    processPayment,
+    submitOrder,
+    cancelOrder,
+    navigate,
+  } = useCheckout();
 
   if (!cliente) { navigate('/login'); return null; }
   if (items.length === 0) { navigate('/menu'); return null; }
-
-  const handleConfirm = async () => {
-    setShowConfirm(false);
-    setLoading(true);
-    try {
-      const { data: pedido } = await api.post('/pedidos/', {
-        items: items.map((i) => ({ producto_id: i.producto_id, cantidad: i.cantidad })),
-      });
-
-      await api.post(`/pedidos/${pedido.id}/pagar`, { metodo_pago: metodo });
-
-      clearCart();
-      toast.success('¡Pedido confirmado! Ya podés seguir el estado.');
-      navigate(`/order/${pedido.id}`);
-    } catch (err) {
-      const errorMsg = err.response?.data?.detail;
-      if (errorMsg?.includes('stock')) {
-        toast.error('Algunos productos ya no tienen stock. Revisá tu pedido.');
-      } else {
-        toast.error(errorMsg || 'No pudimos procesar tu pedido. Intentá de nuevo.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = () => {
-    setShowConfirm(true);
-  };
 
   return (
     <div className="page">
@@ -74,8 +50,8 @@ export default function CheckoutPage() {
                 <div className="item-details">
                   <span className="item-name">{i.nombre}</span>
                   <div className="item-controls">
-                    <button 
-                      className="qty-btn-sm" 
+                    <button
+                      className="qty-btn-sm"
                       onClick={() => {
                         if (i.cantidad === 1) {
                           removeItem(i.producto_id);
@@ -89,15 +65,15 @@ export default function CheckoutPage() {
                       −
                     </button>
                     <span className="item-qty">{i.cantidad}</span>
-                    <button 
-                      className="qty-btn-sm" 
+                    <button
+                      className="qty-btn-sm"
                       onClick={() => updateQuantity(i.producto_id, i.cantidad + 1)}
                       aria-label={`Aumentar cantidad de ${i.nombre}`}
                     >
                       +
                     </button>
-                    <button 
-                      className="remove-btn" 
+                    <button
+                      className="remove-btn"
                       onClick={() => {
                         removeItem(i.producto_id);
                         toast.info(`${i.nombre} eliminado del pedido`);
@@ -140,7 +116,7 @@ export default function CheckoutPage() {
 
           <div className="checkout-actions">
             <button className="btn-ghost" onClick={() => navigate('/menu')}>← Seguir pidiendo</button>
-            <button className="btn-primary btn-large" onClick={handleSubmit} disabled={loading}>
+            <button className="btn-primary btn-large" onClick={submitOrder} disabled={loading}>
               {loading ? (
                 <>
                   <span className="spinner"></span>
@@ -153,13 +129,13 @@ export default function CheckoutPage() {
       </div>
 
       {showConfirm && (
-        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+        <div className="modal-overlay" onClick={cancelOrder}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>¿Confirmás tu pedido?</h3>
             <p>Vas a pagar <strong>${total.toFixed(2)}</strong> con <strong>{METODOS.find(m => m.value === metodo)?.label}</strong></p>
             <div className="modal-actions">
-              <button className="btn-ghost" onClick={() => setShowConfirm(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={handleConfirm}>Sí, confirmar</button>
+              <button className="btn-ghost" onClick={cancelOrder}>Cancelar</button>
+              <button className="btn-primary" onClick={processPayment}>Sí, confirmar</button>
             </div>
           </div>
         </div>

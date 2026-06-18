@@ -4,6 +4,7 @@ import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useSearch } from '../hooks/useSearch';
 import ProductCard from '../components/ProductCard';
 
 const CATEGORIAS = ['Todo', 'Burgers', 'Bebidas', 'Extras'];
@@ -15,7 +16,6 @@ export default function MenuPage() {
   const toast = useToast();
   const [productos, setProductos] = useState([]);
   const [categoriaActiva, setCategoriaActiva] = useState('Todo');
-  const [busqueda, setBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -30,23 +30,15 @@ export default function MenuPage() {
       .finally(() => setLoading(false));
   }, [cliente, navigate]);
 
-  const filtrados = useMemo(() => {
-    let result = productos;
-    
-    if (categoriaActiva !== 'Todo') {
-      result = result.filter((p) => p.categoria === categoriaActiva);
-    }
-    
-    if (busqueda.trim()) {
-      const term = busqueda.toLowerCase().trim();
-      result = result.filter((p) => 
-        p.nombre.toLowerCase().includes(term) ||
-        p.descripcion?.toLowerCase().includes(term)
-      );
-    }
-    
-    return result;
-  }, [productos, categoriaActiva, busqueda]);
+  const productosFiltradosPorCategoria = useMemo(() => {
+    if (categoriaActiva === 'Todo') return productos;
+    return productos.filter((p) => p.categoria === categoriaActiva);
+  }, [productos, categoriaActiva]);
+
+  const { busqueda, setBusqueda, filteredItems, clearSearch, hasResults, resultsCount } = useSearch(
+    productosFiltradosPorCategoria,
+    ['nombre', 'descripcion']
+  );
 
   const cartCount = items.reduce((acc, i) => acc + i.cantidad, 0);
 
@@ -69,7 +61,7 @@ export default function MenuPage() {
 
       <div className="menu-header">
         <h1>Nuestro Menú</h1>
-        
+
         <div className="menu-search">
           <input
             type="search"
@@ -80,9 +72,9 @@ export default function MenuPage() {
             aria-label="Buscar productos"
           />
           {busqueda && (
-            <button 
-              className="search-clear" 
-              onClick={() => setBusqueda('')}
+            <button
+              className="search-clear"
+              onClick={clearSearch}
               aria-label="Limpiar búsqueda"
             >
               ×
@@ -126,18 +118,18 @@ export default function MenuPage() {
         <>
           {busqueda && (
             <p className="search-results">
-              {filtrados.length} {filtrados.length === 1 ? 'resultado' : 'resultados'} 
+              {resultsCount} {resultsCount === 1 ? 'resultado' : 'resultados'}
               {busqueda && <span> para "{busqueda}"</span>}
             </p>
           )}
 
-          {filtrados.length === 0 ? (
+          {!hasResults ? (
             <div className="empty-state">
               {busqueda ? (
                 <>
                   <p className="empty-icon">🔍</p>
                   <p>No encontramos productos con "{busqueda}"</p>
-                  <button className="btn-ghost" onClick={() => setBusqueda('')}>Limpiar búsqueda</button>
+                  <button className="btn-ghost" onClick={clearSearch}>Limpiar búsqueda</button>
                 </>
               ) : (
                 <>
@@ -149,7 +141,7 @@ export default function MenuPage() {
             </div>
           ) : (
             <div className="product-grid">
-              {filtrados.map((p) => <ProductCard key={p.id} producto={p} />)}
+              {filteredItems.map((p) => <ProductCard key={p.id} producto={p} />)}
             </div>
           )}
         </>

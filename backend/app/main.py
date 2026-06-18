@@ -1,10 +1,15 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
 from app.routers import auth, menu, pedidos, cocina, notificaciones
 
-# Crear todas las tablas al arrancar
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(

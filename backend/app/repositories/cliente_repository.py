@@ -1,20 +1,12 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.models import Cliente
+from app.repositories.base_repository import BaseRepository
 
 
-class ClienteRepository:
+class ClienteRepository(BaseRepository[Cliente]):
     def __init__(self, db: Session):
-        self._db = db
-
-    def agregar(self, cliente: Cliente) -> Cliente:
-        self._db.add(cliente)
-        self._db.commit()
-        self._db.refresh(cliente)
-        return cliente
-
-    def obtener(self, cliente_id: str) -> Optional[Cliente]:
-        return self._db.query(Cliente).filter(Cliente.id == cliente_id).first()
+        super().__init__(db, Cliente)
 
     def verificar_credenciales(self, email: str) -> Optional[Cliente]:
         return self._db.query(Cliente).filter(Cliente.email == email).first()
