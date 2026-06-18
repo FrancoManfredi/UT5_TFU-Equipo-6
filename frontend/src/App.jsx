@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { ToastProvider } from './context/ToastContext';
 import Navbar from './components/Navbar';
+import ToastContainer from './components/ToastContainer';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MenuPage from './pages/MenuPage';
@@ -14,20 +16,23 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <BrowserRouter>
-          <Navbar />
-          <main>
-            <Routes>
-              <Route path="/" element={<Navigate to="/menu" replace />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/menu" element={<MenuPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/order/:id" element={<OrderStatusPage />} />
-              <Route path="/kitchen" element={<KitchenPage />} />
-            </Routes>
-          </main>
-        </BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
+            <Navbar />
+            <main>
+              <Routes>
+                <Route path="/" element={<Navigate to="/menu" replace />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/menu" element={<MenuPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/order/:id" element={<OrderStatusPage />} />
+                <Route path="/kitchen" element={<KitchenPage />} />
+              </Routes>
+            </main>
+            <ToastContainer />
+          </BrowserRouter>
+        </ToastProvider>
       </CartProvider>
     </AuthProvider>
   );

@@ -26,12 +26,24 @@ export function CartProvider({ children }) {
     );
   }, []);
 
+  const updateQuantity = useCallback((producto_id, cantidad) => {
+    if (cantidad <= 0) {
+      setItems((prev) => prev.filter((i) => i.producto_id !== producto_id));
+    } else {
+      setItems((prev) =>
+        prev.map((i) =>
+          i.producto_id === producto_id ? { ...i, cantidad } : i
+        )
+      );
+    }
+  }, []);
+
   const clearCart = useCallback(() => setItems([]), []);
 
   const total = items.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, clearCart, total }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, total }}>
       {children}
     </CartContext.Provider>
   );

@@ -1,7 +1,7 @@
 import { useCart } from '../context/CartContext';
 
 export default function ProductCard({ producto }) {
-  const { items, addItem, removeItem } = useCart();
+  const { items, addItem, updateQuantity } = useCart();
   const cartItem = items.find((i) => i.producto_id === producto.id);
   const qty = cartItem ? cartItem.cantidad : 0;
 
@@ -20,9 +20,9 @@ export default function ProductCard({ producto }) {
           <button className="btn-primary" onClick={() => addItem(producto)}>Agregar</button>
         ) : (
           <div className="qty-control">
-            <button onClick={() => removeItem(producto.id)}>−</button>
+            <button onClick={() => updateQuantity(producto.id, qty - 1)} aria-label="Reducir cantidad">−</button>
             <span>{qty}</span>
-            <button onClick={() => addItem(producto)}>+</button>
+            <button onClick={() => updateQuantity(producto.id, qty + 1)} aria-label="Aumentar cantidad">+</button>
           </div>
         )}
       </div>
