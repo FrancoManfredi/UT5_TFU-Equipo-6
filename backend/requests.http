@@ -1,0 +1,186 @@
+### BASE URL
+@base = http://localhost:8000
+
+### ── SEED: agregar productos al menú ──────────────────────────
+
+### Burger Clásica
+POST {{base}}/menu/
+Content-Type: application/json
+
+{
+  "nombre": "Burger Clásica",
+  "descripcion": "Medallón de res, lechuga, tomate y cheddar",
+  "precio": 450,
+  "disponibilidad": 20,
+  "categoria": "Burgers"
+}
+
+### Double Smash
+POST {{base}}/menu/
+Content-Type: application/json
+
+{
+  "nombre": "Double Smash",
+  "descripcion": "Doble medallón aplastado, salsa secreta y pickles",
+  "precio": 620,
+  "disponibilidad": 15,
+  "categoria": "Burgers"
+}
+
+### Coca-Cola
+POST {{base}}/menu/
+Content-Type: application/json
+
+{
+  "nombre": "Coca-Cola",
+  "descripcion": "Lata 354ml",
+  "precio": 180,
+  "disponibilidad": 50,
+  "categoria": "Bebidas"
+}
+
+### Agua Mineral
+POST {{base}}/menu/
+Content-Type: application/json
+
+{
+  "nombre": "Agua Mineral",
+  "descripcion": "500ml sin gas",
+  "precio": 120,
+  "disponibilidad": 50,
+  "categoria": "Bebidas"
+}
+
+### Papas Fritas
+POST {{base}}/menu/
+Content-Type: application/json
+
+{
+  "nombre": "Papas Fritas",
+  "descripcion": "Porción grande con sal y pimienta",
+  "precio": 280,
+  "disponibilidad": 30,
+  "categoria": "Extras"
+}
+
+### Ver menú completo
+GET {{base}}/menu/
+
+### ── AUTH ──────────────────────────────────────────────────────
+
+### Registrar cliente
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "nombre": "Juan Test",
+  "email": "juan@test.com",
+  "telefono": "099123456",
+  "password": "pass1234"
+}
+
+### Login  → copiar access_token en @token
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "juan@test.com",
+  "password": "pass1234"
+}
+
+### ── PEDIDOS ───────────────────────────────────────────────────
+
+### Reemplazá con el token real obtenido en /login
+@token = <PEGAR_TOKEN_AQUI>
+
+### Crear pedido (reemplazá los producto_id con IDs reales del menú)
+# @name crearPedido
+POST {{base}}/pedidos/
+Content-Type: application/json
+X-Cliente-Id: {{token}}
+
+{
+  "items": [
+    { "producto_id": "<ID_BURGER>", "cantidad": 1 },
+    { "producto_id": "<ID_COCA>",   "cantidad": 2 }
+  ]
+}
+
+### Guardar ID del pedido creado
+@pedidoId = <PEGAR_PEDIDO_ID>
+
+### Ver pedido
+GET {{base}}/pedidos/{{pedidoId}}
+X-Cliente-Id: {{token}}
+
+### Pagar con Efectivo
+POST {{base}}/pedidos/{{pedidoId}}/pagar
+Content-Type: application/json
+X-Cliente-Id: {{token}}
+
+{
+  "metodo_pago": "EFECTIVO"
+}
+
+### Pagar con Tarjeta
+# POST {{base}}/pedidos/{{pedidoId}}/pagar
+# Content-Type: application/json
+# X-Cliente-Id: {{token}}
+#
+# {
+#   "metodo_pago": "TARJETA",
+#   "datos_externos": { "ultimos_4": "1234" }
+# }
+
+### Pagar con MercadoPago
+# POST {{base}}/pedidos/{{pedidoId}}/pagar
+# Content-Type: application/json
+# X-Cliente-Id: {{token}}
+#
+# {
+#   "metodo_pago": "MERCADOPAGO",
+#   "datos_externos": { "preference_id": "pref_abc123" }
+# }
+
+### ── COCINA ────────────────────────────────────────────────────
+
+### Ver pedidos activos (no requiere auth)
+GET {{base}}/cocina/pedidos
+
+### Avanzar a EN_PREPARACION
+PATCH {{base}}/cocina/pedidos/{{pedidoId}}/estado
+Content-Type: application/json
+
+{
+  "estado": "EN_PREPARACION"
+}
+
+### Avanzar a LISTO (dispara notificación al cliente)
+PATCH {{base}}/cocina/pedidos/{{pedidoId}}/estado
+Content-Type: application/json
+
+{
+  "estado": "LISTO"
+}
+
+### Avanzar a ENTREGADO
+PATCH {{base}}/cocina/pedidos/{{pedidoId}}/estado
+Content-Type: application/json
+
+{
+  "estado": "ENTREGADO"
+}
+
+### ── NOTIFICACIONES ────────────────────────────────────────────
+
+### Ver mis notificaciones
+GET {{base}}/notificaciones/
+X-Cliente-Id: {{token}}
+
+### Marcar como leída (reemplazá el ID)
+PATCH {{base}}/notificaciones/<NOTIF_ID>/leida
+X-Cliente-Id: {{token}}
+
+### ── HEALTH ────────────────────────────────────────────────────
+
+GET {{base}}/
